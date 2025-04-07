@@ -69,7 +69,7 @@ const AdminInteractions = () => {
                     Interactions
                 </button>
             </div>
-            <section className="w-full h-9/10 mt-5">
+            <section className="w-full h-[calc(100vh-12rem)] mt-5 overflow-y-auto">
                 {selected === "mentors" && (
                     <div
                         onClick={blockUser}
@@ -167,7 +167,7 @@ const AdminInteractions = () => {
                     </div>
                 )}
                 {selected === "interactions" && (
-                    <div className="w-full h-full overflow-y-auto">
+                    <div className="w-full">
                         {interactions.map((int, i) => {
                             return (
                                 <div

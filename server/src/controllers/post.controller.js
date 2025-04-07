@@ -30,6 +30,18 @@ module.exports = {
             }
             if (req.user.role === roles.Mentor) {
                 newPost.group_id = req.user._id;
+                // Find all students mentored by this mentor
+                const students = await Student.find({ mentoredBy: req.user._id });
+                // Get unique co-mentors from all students
+                const coMentors = new Set();
+                for (const student of students) {
+                    student.mentoredBy.forEach(mentorId => {
+                        if (mentorId.toString() !== req.user._id.toString()) {
+                            coMentors.add(mentorId);
+                        }
+                    });
+                }
+                newPost.coMentors = Array.from(coMentors);
             }
             await newPost.save();
 
@@ -44,6 +56,16 @@ module.exports = {
                     mentees
                 );
                 
+                // Also notify co-mentors
+                if (newPost.coMentors.length > 0) {
+                    const coMentors = await Mentor.find({ _id: { $in: newPost.coMentors } });
+                    await notificationController.createNotification(
+                        events.POST_CREATED,
+                        newPost,
+                        req.user,
+                        coMentors
+                    );
+                }
             }
 
             if (req.user.role === roles.Student) {
@@ -86,9 +108,19 @@ module.exports = {
             const limit = 5;
 
             if (req.user.role === roles.Mentor) {
-                const totalDocuments = await Post.countDocuments({ group_id: req.user._id });
+                const totalDocuments = await Post.countDocuments({
+                    $or: [
+                        { group_id: req.user._id },
+                        { coMentors: req.user._id }
+                    ]
+                });
                 totalPages = Math.ceil(totalDocuments / limit);
-                posts = await Post.find({ group_id: req.user._id })
+                posts = await Post.find({
+                    $or: [
+                        { group_id: req.user._id },
+                        { coMentors: req.user._id }
+                    ]
+                })
                     .sort({ createdAt: -1 })
                     .skip((page - 1) * limit)
                     .limit(limit)

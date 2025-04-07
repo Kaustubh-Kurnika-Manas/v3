@@ -12,7 +12,7 @@ const Main = () => {
 
     // redirect the user to the required dashboard if user is present
     if (user?.role === Roles.ADMIN) {
-        history.push("/admin/dashboard");
+        history.push("/admin/dashboard?tab=users");
     }
     if (user?.role === Roles.MENTOR) {
         history.push("/mentor/dashboard");

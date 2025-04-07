@@ -44,3 +44,13 @@ export const autoPairMentorsAndAssignMentees = () =>
     API.post("/mentor/auto-pair").catch((error) => {
         return error.response;
     });
+
+export const updateMenteeYears = () =>
+    API.post("/mentor/update-mentee-years").catch((error) => {
+        return error.response;
+    });
+
+export const updateMenteeYearsReverse = () =>
+    API.post("/mentor/update-mentee-years-reverse").catch((error) => {
+        return error.response;
+    });

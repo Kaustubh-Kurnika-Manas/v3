@@ -49,4 +49,10 @@ router.get("/profile", Auth, Authorize(Role.Mentor), mentorController.getProfile
 // Auto pair mentors and assign mentees
 router.post("/auto-pair", Auth, Authorize([Role.Admin]), mentorController.autoPairMentorsAndAssignMentees, Logger(events.AUTO_PAIR));
 
+// update mentee years
+router.post("/update-mentee-years", Auth, Authorize(Role.Mentor), mentorController.updateMenteeYears);
+
+// update mentee years in reverse
+router.post("/update-mentee-years-reverse", Auth, Authorize(Role.Mentor), mentorController.updateMenteeYearsReverse);
+
 module.exports = router;

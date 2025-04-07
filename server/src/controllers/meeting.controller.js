@@ -6,6 +6,8 @@ const events = require("../utils/logEvents");
 const notificationController = require("../controllers/notification.controller");
 const interactionController = require("./interaction.controller");
 const interactionEvents = require("../utils/interactions.utils");
+const Student = require("../models/Student");
+const Mentor = require("../models/Mentor");
 /**
  *  The method fetches all the available meeting of the current user
  */
@@ -15,7 +17,12 @@ const getAllMeetings = async (req, res, next) => {
 
         // if request is from mentor
         if (req.user.role === roles.Mentor) {
-            meetings = await Meeting.find({ host: req.user._id })
+            meetings = await Meeting.find({
+                $or: [
+                    { host: req.user._id },
+                    { coMentors: req.user._id }
+                ]
+            })
                 .populate("host")
                 .populate("participants.user");
         }
@@ -61,6 +68,19 @@ const createMeeting = async (req, res, next) => {
         newMeeting.description = description;
         newMeeting.url = url;
 
+        // Find all students mentored by this mentor
+        const students = await Student.find({ mentoredBy: req.user._id });
+        // Get unique co-mentors from all students
+        const coMentors = new Set();
+        for (const student of students) {
+            student.mentoredBy.forEach(mentorId => {
+                if (mentorId.toString() !== req.user._id.toString()) {
+                    coMentors.add(mentorId);
+                }
+            });
+        }
+        newMeeting.coMentors = Array.from(coMentors);
+
         await (await newMeeting.save())
             .populate("participants.user")
             .populate("host")
@@ -85,7 +105,16 @@ const createMeeting = async (req, res, next) => {
                 receivers
             );
 
-            // generating interactions on meeting
+            // Also notify co-mentors
+            if (newMeeting.coMentors.length > 0) {
+                const coMentors = await Mentor.find({ _id: { $in: newMeeting.coMentors } });
+                await notificationController.createNotification(
+                    events.MEETING_CREATED,
+                    newMeeting,
+                    req.user,
+                    coMentors
+                );
+            }
 
             // creating interactions
             const interaction = await interactionController.createInteraction(

@@ -133,7 +133,13 @@ const Profile = ({ profileData }) => {
         }
     };
 
-    console.log("Profile data in Profile component:", profileData);
+    // Add detailed logging at component level
+    console.log("Profile component rendered");
+    console.log("Complete profileData:", profileData);
+    console.log("Co-mentors from profileData:", profileData?.coMentors);
+
+    // Add this log to see the complete profile data
+    console.log("Complete Profile Data:", profileData);
 
     return (
         <div
@@ -293,6 +299,19 @@ const Profile = ({ profileData }) => {
                                     <h4 className="text-gray-400">Students under you</h4>
                                     <h4>{profileData?.studentCount}</h4>
                                 </div>
+                                <div className="flex items-start justify-center flex-col">
+                                    <h4 className="text-gray-400">Co-Mentors</h4>
+                                    <h4 className="text-gray-800">
+                                        {profileData?.coMentors && Array.isArray(profileData.coMentors) && profileData.coMentors.length > 0 
+                                            ? profileData.coMentors.map((mentor, index) => (
+                                                <span key={mentor._id}>
+                                                    {mentor.firstname} {mentor.middlename} {mentor.lastname}
+                                                    {index < profileData.coMentors.length - 1 ? ', ' : ''}
+                                                </span>
+                                            ))
+                                            : 'No co-mentors assigned'}
+                                    </h4>
+                                </div>
                             </div>
                             <button
                                 onClick={handleShowModal}
@@ -395,7 +414,13 @@ const Profile = ({ profileData }) => {
                                     </div>
                                     <div className="flex items-start justify-center flex-col mb-4">
                                         <h4 className="text-gray-400">Mentored By</h4>
-                                        <h4 className="text-gray-800">{profileData?.mentoredBy?.name || ''}</h4>
+                                        <h4 className="text-gray-800">
+                                            {profileData?.mentoredBy?.length > 0 
+                                                ? profileData.mentoredBy.map(mentor => 
+                                                    `${mentor.firstname} ${mentor.middlename} ${mentor.lastname}`
+                                                ).join(', ')
+                                                : 'Not assigned'}
+                                        </h4>
                                     </div>
                                     <div className="flex items-start justify-center flex-col">
                                         <h4 className="text-gray-400">Enrollment Year</h4>

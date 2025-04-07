@@ -99,11 +99,12 @@ export const mentorGetAllMenteeSemesters =
 export const mentorGetProfile = () => async (dispatch) => {
     try {
         const { data } = await api.getProfile();
-        console.log("mentor profile in actions", data);
+        console.log("mentor profile in actions:", data);
 
-        //check if the response data is error
         if (data.code === 200) {
             const profile = data.data.profileData;
+            console.log("Profile data in actions:", profile);
+            console.log("Mentees by year in actions:", profile?.menteesByYear);
             if (profile) {
                 return dispatch({ type: "FETCH_MENTOR_PROFILE", profile });
             } else {
@@ -192,5 +193,41 @@ export const autoPairMentorsAndAssignMentees = (history) => async (dispatch) => 
     } catch (error) {
         console.log(error);
         showToast("error", "Error in automated pairing process", 10000, toast.POSITION.BOTTOM_LEFT);
+    }
+};
+
+export const updateMenteeYears = () => async (dispatch) => {
+    try {
+        const { data } = await api.updateMenteeYears();
+        console.log("Update mentee years response:", data);
+
+        if (data.code === 200) {
+            // Update the profile data in the store
+            dispatch({ type: "UPDATE_MENTEE_YEARS", menteesByYear: data.data.menteesByYear });
+            showToast("success", "Years updated successfully", 3000, toast.POSITION.TOP_RIGHT);
+        } else {
+            showToast("error", data.msg, 10000, toast.POSITION.BOTTOM_LEFT);
+        }
+    } catch (error) {
+        console.error("Error updating mentee years:", error);
+        showToast("error", "Failed to update years", 10000, toast.POSITION.BOTTOM_LEFT);
+    }
+};
+
+export const updateMenteeYearsReverse = () => async (dispatch) => {
+    try {
+        const { data } = await api.updateMenteeYearsReverse();
+        console.log("Update mentee years reverse response:", data);
+
+        if (data.code === 200) {
+            // Update the profile data in the store
+            dispatch({ type: "UPDATE_MENTEE_YEARS", menteesByYear: data.data.menteesByYear });
+            showToast("success", "Years updated successfully", 3000, toast.POSITION.TOP_RIGHT);
+        } else {
+            showToast("error", data.msg, 10000, toast.POSITION.BOTTOM_LEFT);
+        }
+    } catch (error) {
+        console.error("Error updating mentee years:", error);
+        showToast("error", "Failed to update years", 10000, toast.POSITION.BOTTOM_LEFT);
     }
 };

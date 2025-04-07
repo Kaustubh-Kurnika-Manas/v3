@@ -25,7 +25,11 @@ const meetingSchema = new mongoose.Schema(
         minutes: {
             type: String,
             default: "",
-        }
+        },
+        coMentors: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Mentor"
+        }]
     },
     {
         timestamps: true,

@@ -16,12 +16,22 @@ const mentor = (
             console.log("tmp", tmp);
             return { ...state, mentees: tmp };
         case "FETCH_MENTOR_PROFILE":
+            console.log("Profile data in reducer:", action.profile);
+            console.log("Mentees by year in reducer:", action.profile?.menteesByYear);
             return { ...state, profileData: action.profile };
         case "CONNECT_SOCKET_MENTOR":
             return { ...state, socket: action.socket };
         case "LOGOUT_MENTOR":
             localStorage.clear();
             return { ...state, mentorData: null };
+        case "UPDATE_MENTEE_YEARS":
+            return {
+                ...state,
+                profileData: {
+                    ...state.profileData,
+                    menteesByYear: action.menteesByYear
+                }
+            };
         default:
             return state;
     }

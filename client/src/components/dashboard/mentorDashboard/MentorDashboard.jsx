@@ -71,6 +71,7 @@ import { getMeetings } from "../../../actions/meeting";
 import Loading from "../../loading/Loading";
 import AdminInteractions from "./dashboardLinks/adminInteractions/AdminInteractions";
 import { authContext } from "../../../contexts/authContext.jsx";
+import MenteesByYear from "./dashboardLinks/menteesByYear/MenteesByYear";
 
 const MentorDashboard = () => {
     let uid = "";
@@ -227,7 +228,7 @@ const MentorDashboard = () => {
 
     // state for maintaining the side nav bar
     const [route, setRoute] = useState({
-        home: role === Roles.ADMIN ? false : true,
+        home: role !== Roles.ADMIN,
         post: false,
         menteeInfo: false,
         profile: false,
@@ -236,9 +237,33 @@ const MentorDashboard = () => {
         manageGroups: false,
         logs: false,
         meetings: false,
-        allInteractions: role === Roles.ADMIN ? true : false,
-        importUsers: false
+        allInteractions: role === Roles.ADMIN,
+        importUsers: false,
+        menteesByYear: false
     });
+
+    // Handle URL parameters to set initial tab
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab');
+        
+        if (tab === 'users' && role === Roles.ADMIN) {
+            setRoute({
+                home: false,
+                post: false,
+                menteeInfo: false,
+                profile: false,
+                chat: false,
+                academicDetails: false,
+                manageGroups: false,
+                logs: false,
+                meetings: false,
+                allInteractions: true,
+                importUsers: false,
+                menteesByYear: false
+            });
+        }
+    }, [role]);
 
     // state to control the chat notification on the dashboard tab
     const [newMsgNotify, setNewMsgNotify] = useState(false);
@@ -356,7 +381,8 @@ const MentorDashboard = () => {
                     logs: false,
                     meetings: false,
                     allInteractions: false,
-                    importUsers: false
+                    importUsers: false,
+                    menteesByYear: false
                 });
                 break;
             case "post":
@@ -372,7 +398,8 @@ const MentorDashboard = () => {
                     logs: false,
                     meetings: false,
                     allInteractions: false,
-                    importUsers: false
+                    importUsers: false,
+                    menteesByYear: false
                 });
                 break;
             case "profile":
@@ -388,7 +415,8 @@ const MentorDashboard = () => {
                     logs: false,
                     meetings: false,
                     allInteractions: false,
-                    importUsers: false
+                    importUsers: false,
+                    menteesByYear: false
                 });
                 break;
             case "menteeInfo":
@@ -404,7 +432,8 @@ const MentorDashboard = () => {
                     logs: false,
                     meetings: false,
                     allInteractions: false,
-                    importUsers: false
+                    importUsers: false,
+                    menteesByYear: false
                 });
                 break;
             case "chat":
@@ -421,7 +450,8 @@ const MentorDashboard = () => {
                     logs: false,
                     meetings: false,
                     allInteractions: false,
-                    importUsers: false
+                    importUsers: false,
+                    menteesByYear: false
                 });
                 break;
             case "academicDetails":
@@ -437,7 +467,8 @@ const MentorDashboard = () => {
                     logs: false,
                     meetings: false,
                     allInteractions: false,
-                    importUsers: false
+                    importUsers: false,
+                    menteesByYear: false
                 });
                 break;
             case "manageGroups":
@@ -452,7 +483,8 @@ const MentorDashboard = () => {
                     logs: false,
                     meetings: false,
                     allInteractions: false,
-                    importUsers: false
+                    importUsers: false,
+                    menteesByYear: false
                 });
                 break;
             case "logs":
@@ -467,7 +499,8 @@ const MentorDashboard = () => {
                     logs: true,
                     meetings: false,
                     allInteractions: false,
-                    importUsers: false
+                    importUsers: false,
+                    menteesByYear: false
                 });
                 break;
             case "allInteractions":
@@ -482,7 +515,8 @@ const MentorDashboard = () => {
                     logs: false,
                     meetings: false,
                     allInteractions: true,
-                    importUsers: false
+                    importUsers: false,
+                    menteesByYear: false
                 });
                 break;
             case "meetings":
@@ -498,7 +532,8 @@ const MentorDashboard = () => {
                     logs: false,
                     meetings: true,
                     allInteractions: false,
-                    importUsers: false
+                    importUsers: false,
+                    menteesByYear: false
                 });
                 break;
             case "importUsers":
@@ -514,7 +549,25 @@ const MentorDashboard = () => {
                     logs: false,
                     meetings: false,
                     allInteractions: false,
-                    importUsers: true
+                    importUsers: true,
+                    menteesByYear: false
+                });
+                break;
+            case "menteesByYear":
+                setVals({ chatRoute: false, postRoute: false });
+                setRoute({
+                    home: false,
+                    post: false,
+                    menteeInfo: false,
+                    profile: false,
+                    chat: false,
+                    academicDetails: false,
+                    manageGroups: false,
+                    logs: false,
+                    meetings: false,
+                    allInteractions: false,
+                    importUsers: false,
+                    menteesByYear: true
                 });
                 break;
             default:
@@ -882,6 +935,24 @@ const MentorDashboard = () => {
                                     Import Users
                                 </button>
                             )}
+                            {role === Roles.MENTOR && (
+                                <button
+                                    onClick={handleRouteChange}
+                                    id="menteesByYear"
+                                    className={`${route.menteesByYear
+                                        ? "text--gray-700 bg-gray-100"
+                                        : "text-gray-400"
+                                        } flex items-center text-left hover:bg-gray-100 mt-5 ml-8 mr-8 pt-3 pb-3 pl-10 rounded-md`}
+                                >
+                                    <UserGroupIcon
+                                        myStyle={"h-5 w-5 mr-3 pointer-events-none"
+                                            .concat(" ")
+                                            .concat(route.menteesByYear && "text-blue-600")}
+                                        alt={true}
+                                    />
+                                    Mentees by Year
+                                </button>
+                            )}
                             <button
                                 onClick={handleLogout}
                                 id="profile"
@@ -1127,6 +1198,7 @@ const MentorDashboard = () => {
                                 {route.logs && <Logs />}
                                 {route.meetings && <Meetings />}
                                 {route.allInteractions && <AdminInteractions />}
+                                {route.menteesByYear && <MenteesByYear />}
                             </div>
                         </div>
                     </div>

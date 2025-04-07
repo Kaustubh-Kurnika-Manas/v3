@@ -225,13 +225,79 @@ module.exports = {
     // Get mentor profile
     getProfile: async (req, res, next) => {
         try {
-            const students = await Student.find({ mentoredBy: { $in: [req.user._id] } });
-            req.user.studentCount = students.length;
-            response.success(res, "", { profileData: req.user });
+            const students = await Student.find({ mentoredBy: req.user._id }).populate('mentoredBy');
+            console.log("Students found:", students.length);
+            console.log("First student's year:", students[0]?.year);
+
+            // Group students by year
+            const menteesByYear = {
+                firstYear: [],
+                secondYear: [],
+                thirdYear: [],
+                fourthYear: []
+            };
+
+            // Group students by their year
+            for (const student of students) {
+                switch (student.year) {
+                    case 'I':
+                        menteesByYear.firstYear.push(student);
+                        break;
+                    case 'II':
+                        menteesByYear.secondYear.push(student);
+                        break;
+                    case 'III':
+                        menteesByYear.thirdYear.push(student);
+                        break;
+                    case 'IV':
+                        menteesByYear.fourthYear.push(student);
+                        break;
+                    default:
+                        console.log("Unknown year value:", student.year);
+                }
+            }
+
+            // Get co-mentors using a Map to ensure uniqueness
+            const coMentorsMap = new Map();
+            for (const student of students) {
+                for (const mentorId of student.mentoredBy) {
+                    // Only add mentors who are not the current user and not already in the map
+                    if (mentorId.toString() !== req.user._id.toString()) {
+                        coMentorsMap.set(mentorId.toString(), mentorId);
+                    }
+                }
+            }
+
+            // Convert Map to array and populate mentor details
+            const coMentors = [];
+            for (const mentorId of coMentorsMap.values()) {
+                const mentor = await Mentor.findById(mentorId);
+                if (mentor && mentor._id.toString() !== req.user._id.toString()) {
+                    coMentors.push({
+                        _id: mentor._id,
+                        firstname: mentor.firstname,
+                        middlename: mentor.middlename,
+                        lastname: mentor.lastname,
+                        department: mentor.department,
+                        designation: mentor.designation
+                    });
+                }
+            }
+
+            // Create the profile data object
+            const profileData = {
+                ...req.user.toObject(),
+                studentCount: students.length,
+                coMentors: coMentors,
+                menteesByYear: menteesByYear
+            };
+
+            console.log("Profile data being sent:", profileData);
+            response.success(res, "", { profileData });
             next();
-        } catch (err) {
-            console.log(err);
-            response.error(res);
+        } catch (error) {
+            console.error("Error in getProfile:", error);
+            response.error(res, error.message);
         }
     },
 
@@ -287,6 +353,131 @@ module.exports = {
         } catch (err) {
             console.log(err);
             response.error(res);
+        }
+    },
+
+    // Update mentee years
+    updateMenteeYears: async (req, res, next) => {
+        try {
+            const students = await Student.find({ mentoredBy: req.user._id });
+            
+            // First, delete fourth year students
+            const fourthYearStudents = students.filter(student => student.year === 'IV');
+            for (const student of fourthYearStudents) {
+                await Student.findByIdAndDelete(student._id);
+            }
+            
+            // Update years for remaining students
+            for (const student of students) {
+                if (student.year !== 'IV') { // Skip fourth year students as they're already deleted
+                    switch (student.year) {
+                        case 'I':
+                            student.year = 'II';
+                            break;
+                        case 'II':
+                            student.year = 'III';
+                            break;
+                        case 'III':
+                            student.year = 'IV';
+                            break;
+                    }
+                    await student.save();
+                }
+            }
+
+            // Fetch updated students
+            const updatedStudents = await Student.find({ mentoredBy: req.user._id }).populate('mentoredBy');
+            
+            // Group updated students by year
+            const menteesByYear = {
+                firstYear: [],
+                secondYear: [],
+                thirdYear: [],
+                fourthYear: []
+            };
+
+            for (const student of updatedStudents) {
+                switch (student.year) {
+                    case 'I':
+                        menteesByYear.firstYear.push(student);
+                        break;
+                    case 'II':
+                        menteesByYear.secondYear.push(student);
+                        break;
+                    case 'III':
+                        menteesByYear.thirdYear.push(student);
+                        break;
+                    case 'IV':
+                        menteesByYear.fourthYear.push(student);
+                        break;
+                }
+            }
+
+            response.success(res, "Years updated successfully", { menteesByYear });
+            next();
+        } catch (error) {
+            console.error("Error updating mentee years:", error);
+            response.error(res, error.message);
+        }
+    },
+
+    // Update mentee years in reverse
+    updateMenteeYearsReverse: async (req, res, next) => {
+        try {
+            const students = await Student.find({ mentoredBy: req.user._id });
+            
+            // Update years in reverse
+            for (const student of students) {
+                switch (student.year) {
+                    case 'II':
+                        student.year = 'I';
+                        break;
+                    case 'III':
+                        student.year = 'II';
+                        break;
+                    case 'IV':
+                        student.year = 'III';
+                        break;
+                    case 'I':
+                        // First year students stay as is
+                        break;
+                }
+                await student.save();
+            }
+
+            // Fetch updated students
+            const updatedStudents = await Student.find({ mentoredBy: req.user._id }).populate('mentoredBy');
+            
+            // Group updated students by year
+            const menteesByYear = {
+                firstYear: [],
+                secondYear: [],
+                thirdYear: [],
+                fourthYear: []
+            };
+
+            for (const student of updatedStudents) {
+                switch (student.year) {
+                    case 'I':
+                        menteesByYear.firstYear.push(student);
+                        break;
+                    case 'II':
+                        menteesByYear.secondYear.push(student);
+                        break;
+                    case 'III':
+                        menteesByYear.thirdYear.push(student);
+                        break;
+                    case 'IV':
+                        menteesByYear.fourthYear.push(student);
+                        break;
+                }
+            }
+
+            response.success(res, "Years updated successfully", { menteesByYear });
+            next();
+        } catch (error) {
+            console.error("Error updating mentee years:", error);
+            response.error(res, error.message);
         }
     },
 };

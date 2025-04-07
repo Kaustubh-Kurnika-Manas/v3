@@ -29,7 +29,11 @@ const postSchema = new mongoose.Schema(
         commentEnabled: {
             type: Boolean,
             default: true
-        }
+        },
+        coMentors: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Mentor"
+        }]
     },
     {
         timestamps: true,
